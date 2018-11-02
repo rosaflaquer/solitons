@@ -56,7 +56,7 @@ def animate_grey(i):
     return line,
 
 """
-#Slider
+#Slider (does not work yet)
 xvel= plt.axes([0.25, 0.03,0.50,0.02])
 svel = Slider(xvel, 'Vel', 0, 1, valinit=vel)
 
