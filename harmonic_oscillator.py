@@ -2,8 +2,8 @@
 """
 Created on Sat Oct 27 17:47:24 2018; edited on Fri Nov  2 23:10:54 2018
 
-solution for the Gross-Pitaievskii equation for a null external potential and the 
-interaction term equal to 0
+Solutions for the ground state's eigenefunction of an harmoic oscillator, first in free space r_free and then including the 
+potential (not yet!! -sat 3/11) to check the CN method we want to use to solve the GP equation. 
 
 @author: Rosa
 """
