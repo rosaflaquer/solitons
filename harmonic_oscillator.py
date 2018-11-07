@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-Created on Sat Oct 27 17:47:24 2018; edited on Fri Nov  2 23:10:54 2018
+Created on Sat Oct 27 17:47:24 2018; edited on Fri Nov 2 23:10:54 2018
 
-Solutions for the ground state's eigenefunction of an harmoic oscillator, first in free space r_free and then including the 
-potential (not yet!! -sat 3/11) to check the CN method we want to use to solve the GP equation. 
+Evolution of the ground state of a quantic harmonic oscillator.
 
 @author: Rosa
 """
@@ -47,6 +46,11 @@ def Normalitzation(array,h):
     constant=(h/3.)*constant
     return np.sqrt(1/np.real(constant))
     
+#potential
+def V_harm(x):
+    #harmonic potential for a adimensionalized z, set to 0 for free space
+    return 0.5*x**2
+    
 #sytem at time t, it has to include all the boundary conditions
 time_0=[]
 for position in z:
@@ -68,21 +72,28 @@ time_1=time_0
 #matrixs for the Crank-Nicholson method
 #first [] the numbers to plug in the diagonals, second [] position of the 
 #diagonals (0 is the main one), shape: matrix's shape
-r_free= (1j*dt)/(2*dz**2) #parameter of the method for free space
-A=diags([-r_free,2*(1+r_free),-r_free],[-1,0,1], shape=(len(time_0),len(time_0)))
+#we compute the main diagonals of the matrices, which in general will depend 
+#on the position z
+r= (1j*dt)/(4*dz**2) #parameter of the method 
+middleA=[]
+middleB=[]
+for position in z:
+    middleA.append((1+2*r +2*r*dz**2*V_harm(position)))
+    middleB.append((1-2*r -2*r*dz**2*V_harm(position)))
+A=diags([-r,middleA,-r],[-1,0,1], shape=(len(time_0),len(time_0)))
 A=scipy.sparse.csr_matrix(A) #turs to sparse csr matrix (needed for the tridiag solver)
-B=diags([r_free,2*(1-r_free),r_free],[-1,0,1], shape=(len(time_0),len(time_0)))
+B=diags([r,middleB,r],[-1,0,1], shape=(len(time_0),len(time_0)))
 
 #plot of the square modulus of phy at t=0
 plt.ylabel('$|\psi(\~z)|^2$')
-plt.xlabel('$\~z =z\sqrt{m/\hbar}$')
+plt.xlabel('$\~z =z\sqrt{m\omega/\hbar}$')
 plt.plot(z,np.real(time_0*time_0.conjugate()))
 
 energy=0
 t=0
 dif_norm=0.
 
-while t < 1:
+while t < 100:
     #ndarray b product of B and the system's state at time t
     prod=B.dot(time_0)
     #solver of a tridiagonal problem
@@ -96,8 +107,7 @@ while t < 1:
 #plot the evolved function
 plt.plot(z,np.real(time_1*time_1.conjugate()))
 print('norm_diference:',dif_norm)
-print('r',r_free)
+print('r',r)
 # your code
 elapsed_time = time.time() - start_time
 print('computing time=',elapsed_time)
-
