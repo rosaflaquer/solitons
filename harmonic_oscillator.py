@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 """
-Created on Sat Oct 27 17:47:24 2018; edited on Fri Nov 2 23:10:54 2018
+Created on Sat Oct 27 17:47:24 2018; edited on Fri Nov  2 23:10:54 2018
 
-Evolution of the ground state of a quantic harmonic oscillator.
+solution for the Gross-Pitaievskii equation for a null external potential and the 
+interaction term equal to 0
 
 @author: Rosa
 """
@@ -48,7 +49,7 @@ def Normalitzation(array,h):
     
 #potential
 def V_harm(x):
-    #harmonic potential for a adimensionalized z, set to 0 for free space
+    #harmonic potential for a adimensionalized z
     return 0.5*x**2
     
 #sytem at time t, it has to include all the boundary conditions
@@ -93,7 +94,7 @@ energy=0
 t=0
 dif_norm=0.
 
-while t < 100:
+while t < 5:
     #ndarray b product of B and the system's state at time t
     prod=B.dot(time_0)
     #solver of a tridiagonal problem
