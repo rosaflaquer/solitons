@@ -116,11 +116,11 @@ plt.xlabel('$\~z$')
 plt.xlim(-10,10)
 plt.plot(z,np.real(time_0*time_0.conjugate())/n)
 
-energy=0
+ev_time=10
 t=0
 dif_norm=0.
 
-while t < 5:
+while t < ev_time:
     #ndarray b product of B and the system's state at time t
     prod=B.dot(time_0)
     #solver of a tridiagonal problem
