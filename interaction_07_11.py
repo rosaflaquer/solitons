@@ -11,18 +11,20 @@ from scipy.sparse import diags
 from scipy.sparse import linalg
 import matplotlib.pyplot as plt
 import time
+from matplotlib.animation import FuncAnimation
+import matplotlib.animation as animation
 
 start_time = time.time()
 
 #define the spacing and time interval
-limits=20
+limits=15
 dz=0.1 #spacing
 Nz=(limits-(-limits))/dz #number of points
 z=np.linspace(-limits,limits,Nz) #position vector, from -10 to 10 Nz points
 dt=0.009 #time interval
 
 #parameters of the solutions of the solitons
-v=0 #velocity (goes from 0 to 1)
+v=0.9 #velocity (goes from 0 to 1)
 n=5 #density, n_inf for grey solitons, n_0 for bright solitons
 z0=0 #initial position 
 
@@ -36,7 +38,7 @@ def bright(z,t,v,n,z0):
     "solution for a bright soliton whith Vext=0"
     imag= 0.0 + 1j
     arg1=((z-z0)*v)
-    arg2=((0.5 -v**2/4)*t)
+    arg2=(t*0.5*(1 - v**2))
     psi=np.sqrt(n)*(1/np.cosh((z-z0) -v*t))*np.exp(arg1*imag)*np.exp(arg2*imag)
     return psi
     
@@ -76,27 +78,24 @@ def interact(g,n,funct):
     return g*np.real(funct*funct.conjugate())/n
     
 #sytem at time t, it has to include all the boundary conditions
-time_0=[]
+func_0=[]
 if g==-1:
     for position in z:
-        time_0.append(bright(position,0,v,n,z0))
+        func_0.append(bright(position,0,v,n,z0))
 else:
     for position in z:
-        time_0.append(gaussian(position,0,1)*grey(position,0,v,n,z0))
+        func_0.append(gaussian(position,0,1)*grey(position,0,v,n,0.5))
 
-time_0=np.asanyarray(time_0) #turs to an ndarray (needed for the tridiag solver)
-
-#normalitzation, we compute it with the Simpson's method:
-time_0=time_0
+func_0=np.asanyarray(func_0) #turs to an ndarray (needed for the tridiag solver)
 
 #we store the norm at t=0 as it will be useful for cheking if it is preserved during
 #the time evolution.
-norm_0=Normalitzation(time_0,dz)
-print('n0',max(np.real(time_0*time_0.conjugate())))
+norm_0=Normalitzation(func_0,dz)
+print('n0',max(np.real(func_0*func_0.conjugate())))
 
 
 #system at time t+1
-time_1=time_0
+func_1=func_0
 
 #matrixs for the Crank-Nicholson method
 #first [] the numbers to plug in the diagonals, second [] position of the 
@@ -104,38 +103,44 @@ time_1=time_0
 #we compute the main diagonals of the matrices, which in general will depend 
 #on the position z
 r= (1j*dt)/(4*dz**2) #parameter of the method 
-middleA=[1+2*r +2*r*dz**2*interact(g,n,time_0)] #main diagonal of the matrix A
-middleB=[1-2*r -2*r*dz**2*interact(g,n,time_0)] #main diagonal for the matrix B
-A=diags([-r,middleA,-r],[-1,0,1], shape=(len(time_0),len(time_0)))
+middleA=[1+2*r +2*r*dz**2*interact(g,n,func_0)] #main diagonal of the matrix A
+middleB=[1-2*r -2*r*dz**2*interact(g,n,func_0)] #main diagonal for the matrix B
+A=diags([-r,middleA,-r],[-1,0,1], shape=(len(func_0),len(func_0)))
 A=scipy.sparse.csr_matrix(A) #turs to sparse csr matrix (needed for the tridiag solver)
-B=diags([r,middleB,r],[-1,0,1], shape=(len(time_0),len(time_0)))
+B=diags([r,middleB,r],[-1,0,1], shape=(len(func_0),len(func_0)))
 
 #plot of the square modulus of phy at t=0
 plt.ylabel('$|\psi(\~z)|^2$/n')
 plt.xlabel('$\~z$')
-plt.xlim(-10,10)
-plt.plot(z,np.real(time_0*time_0.conjugate())/n)
+#plt.xlim(-10,10)
+#plt.ylim(-0.2,1.2)
+plt.plot(z,np.real(func_0*func_0.conjugate())/n)
 
-ev_time=10
+energy=0
 t=0
-dif_norm=0.
+dif_norm=0
+ev_time= 10
+counter=0
+print('evolution time:',ev_time)
 
 while t < ev_time:
     #ndarray b product of B and the system's state at time t
-    prod=B.dot(time_0)
+    prod=B.dot(func_0)
     #solver of a tridiagonal problem
-    time_1=linalg.spsolve(A,prod)
+    func_1=linalg.spsolve(A,prod)
     #we store the maximum diference between the norm_0 and the evolved one
-    dif_norm=max(dif_norm,abs(norm_0 - Normalitzation(time_1,dz)))
+    dif_norm=max(dif_norm,abs(norm_0 - Normalitzation(func_1,dz)))
     #redefine each matrix
-    time_0=time_1
+    func_0=func_1
     t += dt
+    if counter% 200 ==0:
+        plt.plot(z,np.real(func_1*func_1.conjugate())/n)
+    counter+=1
 
 #plot the evolved function
-plt.plot(z,np.real(time_1*time_1.conjugate())/n)
 print('norm_diference:',dif_norm)
 print('r',r)
-print('n_0 evolved',max(np.real(time_1*time_1.conjugate())))
+print('n_0 evolved',max(np.real(func_1*func_1.conjugate())))
 # your code
 elapsed_time = time.time() - start_time
 print('computing time=',elapsed_time)
