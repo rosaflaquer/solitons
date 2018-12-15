@@ -179,7 +179,4 @@ b_start = Button(start, 'Continue')
 b_start.on_clicked(button_start)
 
 
-
-#a=FuncAnimation(fig, animate, init_func=init, frames=steps,interval=1, repeat=True)
-
 plt.show()
